@@ -1,0 +1,7 @@
+dist
+node_modules
+*.pem
+*.sh
+*.cnf
+config.json
+v3.ext
