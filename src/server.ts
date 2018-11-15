@@ -30,7 +30,8 @@ try {
     process.exit(1);
 }
 
-let HTTP_PORT = config.port || 80;
+config.port = config.port || 80;
+config.interface = config.interface || '127.0.0.1';
 
 // let nginx handle the TLS layer
 /*
@@ -54,7 +55,7 @@ let app = new Koa()
     .listen(HTTPS_PORT, '0.0.0.0');*/
 const httpServer = http
     .createServer(app.callback())
-    .listen(HTTP_PORT, '0.0.0.0', () => {
+    .listen(config.port, config.interface, () => {
         console.log('Server started');
     });
 
