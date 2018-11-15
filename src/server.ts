@@ -4,14 +4,16 @@ import * as Static from 'koa-static';
 import * as send from 'koa-send';
 import * as fs from 'fs';
 import * as https from 'https';
+import * as http from 'http';
 import * as WebSocket from 'ws';
 import * as crypto from 'crypto';
 import * as path from 'path';
 
-const HTTPS_PORT = 443;
+// let nginx handle this
+// let HTTPS_PORT = 443;
 const WebSocketServer = WebSocket.Server;
 
-let config: { frontend: string } = { frontend: '.' };
+let config: { frontend: string, port: number } = { frontend: '.', port: 80 };
 
 try {
     config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config.json')).toString());
@@ -20,10 +22,15 @@ try {
     process.exit(1);
 }
 
+let HTTP_PORT = config.port || 80;
+
+// let nginx handle the TLS layer
+/*
 const serverConfig = {
     key: fs.readFileSync('key.pem'),
     cert: fs.readFileSync('cert.pem'),
 };
+*/
 
 let router = new Router();
 
@@ -34,11 +41,17 @@ let app = new Koa()
     .use(router.routes())
     .use(router.allowedMethods());
 
-const httpsServer = https
+/*const httpsServer = https
     .createServer(serverConfig, app.callback())
-    .listen(HTTPS_PORT, '0.0.0.0');
+    .listen(HTTPS_PORT, '0.0.0.0');*/
+const httpServer = http
+    .createServer(app.callback())
+    .listen(HTTP_PORT, '0.0.0.0', () => {
+        console.log('Server started');
+    });
 
-const wss = new WebSocketServer({ server: httpsServer });
+//const wss = new WebSocketServer({ server: httpsServer });
+const uwss = new WebSocketServer({ server: httpServer });
 
 export enum CommandType {
     RequestToken,
@@ -58,7 +71,7 @@ let availableroom = new Map<string, WebSocket[]>();
 // sont controllable par un attaquant.
 let makeRandString = (l: number) => crypto.randomBytes(l).toString('hex');
 
-wss.on('connection', ws => {
+let handleConnection = (ws: WebSocket) => {
     let room: string;
     // Pour éviter que les clients utilisent le serveur comme tiers pour échanger des données
     // un client émettant plus de 1024 octets sera automatiquement déconnecté.
@@ -137,4 +150,7 @@ wss.on('connection', ws => {
             ws.close();
         }
     };
-});
+}
+
+//wss.on('connection', handleConnection);
+uwss.on('connection', handleConnection);

@@ -1,3 +1,4 @@
 {
-    "frontend": "/path/to/WeebRTC-frontend/dist"
+    "frontend": "/path/to/WeebRTC-frontend/dist",
+    "port": 5324
 }
