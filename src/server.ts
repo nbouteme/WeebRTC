@@ -13,7 +13,15 @@ import * as path from 'path';
 // let HTTPS_PORT = 443;
 const WebSocketServer = WebSocket.Server;
 
-let config: { frontend: string, port: number } = { frontend: '.', port: 80 };
+let config: {
+    frontend: string,
+    interface: string,
+    port: number
+} = {
+    frontend: '.',
+    interface: '127.0.0.1',
+    port: 80,
+};
 
 try {
     config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config.json')).toString());
